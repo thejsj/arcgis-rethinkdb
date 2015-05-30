@@ -14,5 +14,8 @@ module.exports = {
     db: "test"
   },
   host: "localhost:8000",
-  port: 8000
+  ports: {
+    http: 8000,
+    socket: 9000
+  },
 };

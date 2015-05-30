@@ -1,95 +1,72 @@
+require([
+  "esri/map",
+  "esri/layers/FeatureLayer",
+  "esri/renderers/SimpleRenderer",
+  "esri/Color",
+  "esri/geometry/Polygon",
+  "esri/geometry/Point",
+  "esri/symbols/SimpleFillSymbol",
+  "esri/symbols/SimpleLineSymbol",
+  "esri/symbols/SimpleMarkerSymbol",
+  "esri/graphic",
+  "esri/SpatialReference",
+  "esri/tasks/FeatureSet",
+  "dojo/domReady!"
+], function(
+  Map,
+  FeatureLayer,
+  SimpleRenderer,
+  Color,
+  Polygon,
+  Point,
+  SimpleFillSymbol,
+  SimpleLineSymbol,
+  SimpleMarkerSymbol,
+  Graphic,
+  SpatialReference,
+  FeatureSet,
+  domReady
+) {
+   var esriObject = {
+     "geometry" : {
+        "rings" : [[[-97.06138,32.837],[-97.06133,32.836],[-97.06124,32.834],[-97.06127,32.832],
+                    [-97.06138,32.837]],[[-97.06326,32.759],[-97.06298,32.755],[-97.06153,32.749],
+                    [-97.06326,32.759]]],
+        "spatialReference" : {"wkid" : 4326}
+      },
+      "attributes" : {
+        "OWNER" : "Joe Smith",
+        "VALUE" : 94820.37,
+        "APPROVED" : true,
+        "LASTUPDATE" : 1227663551096
+      }
+    };
 
-$(document).ready(function() {
+  var sfs = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID,
+    new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASHDOT,
+    new Color([255,0,0]), 2),new Color([255,255,0,0.25])
+  );
 
-  var mapTiles = "http://{s}.tile.osm.org/{z}/{x}/{y}.png";
-  var mapAttrib = "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors";
-
-  var map = L.map("map").setView([40, -100], 4);
-  var tileLayer = L.tileLayer(mapTiles, { attribution: mapAttrib }).addTo(map);
-  tileLayer.setOpacity(1.0);
-
-  $("#toggle").click(function(e) {
-    $("#toggle .button").removeClass("selected");
-    $(e.target).addClass("selected");
-    if (e.target.id == "off-button") tileLayer.setOpacity(0.1);
-    else tileLayer.setOpacity(1.0);
+  var map = new Map("map", {
+    basemap: "gray",
+    center: [-97.402, 32.642],
+    zoom: 15
   });
 
-  // Add a layer for the county stats
-  var maxStat = 0.0;
-  var styleFun = function(g) {
-    var letters = '0123456789abcdeff'.split('');
-    var scaledStat = Math.log(1 + 99999 * g.geometry.stat / maxStat) / Math.log(100000);
-    //var scaledStat = Math.log(1 + 99 * g.geometry.stat / maxStat) / Math.log(100);
-    var red = scaledStat * 255;
-    var green = 32 + 64 * scaledStat;
-    var blue = 96 - 32 * scaledStat;
-    var opacity = 0.3 + 0.7 * scaledStat;
-    var colorStr = "#" +
-      letters[Math.floor(red / 16)] + letters[Math.floor(red) % 16] +
-      letters[Math.floor(green / 16)] + letters[Math.floor(green) % 16] +
-      letters[Math.floor(blue / 16)] + letters[Math.floor(blue) % 16];
-    return {
-      color: colorStr,
-      opacity: 1.0,
-      fillOpacity: opacity,
-      weight: 0
-    };
-  };
-  var countyLayer = L.geoJson([], {style: styleFun}).addTo(map);
-
-  var template = Handlebars.compile($("#food-template").html());
-  var markers = [];
-
-  var addFood = function (food) {
-    if (food.place) {
-      var count = markers.unshift(L.marker(L.latLng(
-          food.place.coordinates[1],
-          food.place.coordinates[0])));
-
-      map.addLayer(markers[0]);
-      markers[0].bindPopup(
-          "<img src=\"" + food.images.thumbnail.url + "\">",
-          {minWidth: 150, minHeight: 150, autoPan: false});
-
-      markers[0].openPopup();
-
-      if (count > 50)
-        map.removeLayer(markers.pop());
-    }
-  };
-
-  var adjustStatRange = function (county) {
-    if (county.stat > maxStat) {
-      maxStat = county.stat;
-      countyLayer.setStyle(styleFun);
-    }
-  };
-
-  var addCounty = function (county) {
-    var mangledCounty = county.geometry;
-    mangledCounty.stat = county.stat;
-    L.geoJson(mangledCounty, { style: styleFun })
-      .addTo(countyLayer)
-      .bindPopup('<div>' +
-        '<h5>' + county.city_name + ', ' + county.state_name + '</h5>' +
-        '<p>Area: ' + county.area + '</span>' +
-        '<p>Population: ' + county.population + '</span>' +
-        '<p>Restaurants: ' + county.restaurants + '</span>' +
-        '<p>Restaurants/Area: ' + (county.restaurants/county.area).toFixed(5) + '</span>' +
-      '</div>');
-  };
+  //map.addLayer(featureLayer);
+  var point = new Point(-97.402, 32.642, new SpatialReference({wkid:4326}));
+  var simpleMarkerSymbol = new SimpleMarkerSymbol();
+  var graphic = new Graphic(point, simpleMarkerSymbol);
 
   var socket = io.connect();
-
-  socket.on("food", addFood);
-  socket.on("initialFood", function(food) {
-    food.forEach(addFood);
+  map.on('load', function () {
+    console.log('Load');
+    socket.on('region', function (region) {
+      console.log('Region', region);
+      map.graphics.add(new Graphic(region, sfs));
+    });
   });
 
-  socket.on("stat", function(county) {
-    adjustStatRange(county);
-    addCounty(county);
-  });
+ });
 
-});
+

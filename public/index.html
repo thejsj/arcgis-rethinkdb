@@ -1,44 +1,36 @@
-<!DOCTYPE html>
-<html ng-app="refood">
+<html>
   <head>
-    <script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.runtime.min.js"></script>
-    
+    <link rel="stylesheet" href="http://js.arcgis.com/3.13/esri/css/esri.css">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="app.js"></script>
-
-    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600">
-    <link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
-    <link rel="stylesheet" href="/style.css">
+    <style>
+      html, body, #map {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: #FFF;
+        overflow: hidden;
+        font-family: "Trebuchet MS";
+      }
+      #info {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        padding: 10px;
+        background-color: #ddd;
+        font: 14px Segoe UI;
+        width: 200px;
+        text-align: center;
+        border-radius: 0 10px 0 0;
+      }
+    </style>
+    <script src="http://js.arcgis.com/3.13/"></script>
+    <script src="app.js"></script>
   </head>
   <body>
-
-    <div id="titlebar">
-      <div id="toggle">
-        <div class="button selected" id="on-button">Light</div>
-        <div class="button" id="off-button">Dark</div>
-      </div>
-    
-      <h1>ReStaurant</h1>
-    </div>
-
-    <div id="content">
-      <div id="map"></div>
-    </div>
-
-    <script id="food-template" type="text/x-handlebars-template">
-      <div class="food">
-        <div class="user">{{user.full_name}}</div>
-        <div class="meta">
-          <div class="time">Posted at {{date}}</div>
-          <div class="caption">{{caption.text}}</div>
-        </div>
-        <img class="thumb" src="{{images.low_resolution.url}}">
-      </div>
-    </script>
-
+    <div id="map"></div>
   </body>
 </html>

@@ -17,3 +17,9 @@ for new images from Instagram and adds them to the database.
 ## Features
 
 1. Add pop-up for showing county name, population, number of restaurants, area, restaurants per area
+
+## TODO
+
+1. Add relative colors in relation to their density
+2. Add tooltip
+3. Add changefeeds?

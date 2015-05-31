@@ -13,7 +13,8 @@ app
   .use(bodyParser.urlencoded({extended: true}))
   .use(express.static(__dirname + "/public"));
 
-var io = sockio.listen(app.listen(config.ports.http), { log: false });
+var io = sockio.listen(app.listen(config.port), { log: false });
+console.log("Server started on port " + config.port);
 
 r.init(config.database, [
   {
@@ -23,15 +24,28 @@ r.init(config.database, [
 ])
 .then(function (conn) {
   r.conn = conn;
+  // Send out notifications for new food pictures as they come in
+  r.table("instafood").changes().run(r.conn)
+    .then(function(cursor) {
+      cursor.each(function(err, item) {
+        if (item && item.new_val) {
+          io.sockets.emit("food", item.new_val);
+        }
+      });
+    });
 });
 
-io.on("connection", function(socket) {
+io.sockets.on("connection", function(socket) {
   Promise.resolve()
   .then(function () {
-    return r.connect(config.database);
+    return [
+      r.connect(config.database),
+      r.connect(config.database)
+    ];
   })
-  .then(function(conn1) {
+  .spread(function(conn1, conn2) {
     r.conn1 = conn1;
+    r.conn2 = conn2;
 
     /*!
      * For every count, get restaurants inside that county
@@ -74,26 +88,33 @@ io.on("connection", function(socket) {
   })
   .then(function(cursor) {
     // Start sending out stats
-    var count = 0;
     var sendStat = function(err, stat) {
       if (err) throw err;
-      var myPolygon = {"geometry":{"rings":[[[-115.3125,37.96875],[-111.4453125,37.96875],
-        [-99.84375,36.2109375],[-99.84375,23.90625],[-116.015625,24.609375],
-        [-115.3125,37.96875]]],"spatialReference":{"wkid":4326}},
-        "symbol":{"color":[0,0,0,64],"outline":{"color":[0,0,0,255],
-        "width":1,"type":"esriSLS","style":"esriSLSSolid"},
-        "type":"esriSFS","style":"esriSFSSolid"}};
-
-
-      console.log("Region", stat);
-      socket.emit("region", myPolygon);
+      socket.emit("stat", stat);
     };
     var closeConn1 = function() {
+      console.log('Close Connection #1');
       r.conn1.close();
       delete r.conn1;
-      console.log('Query cursor finished');
     };
     cursor.each(sendStat, closeConn1);
+
+    // Grab the 50 latest food pictures
+    return r.table("instafood")
+      .orderBy({index: r.desc("time")})
+      .limit(50).run(r.conn2);
   })
-  .error(function(err) { console.log("Failure:", err); });
+  .then(function(cursor) { return cursor.toArray(); })
+  .then(function(result) {
+    console.log('InitialFood Emit');
+    socket.emit("initialFood", result);
+  })
+  .error(function(err) { console.log("Failure:", err); })
+  .finally(function() {
+    console.log('Close Connection #2');
+    if (r.conn2) {
+      r.conn2.close();
+    }
+  });
 });
+

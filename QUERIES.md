@@ -51,6 +51,63 @@ r.db('GITHUB_HANDLE_rethinkdb_workshop').table('reddit')(0).update({ score: 9999
 r.db('GITHUB_HANDLE_rethinkdb_workshop').table('reddit')(0).update({ score: 0 })
 ```
 
+## GeoSpatial
+
+First, insert test data
+
+```
+// Create Table
+r.tableCreate('states');
+// Add rows to table
+r.table('states')
+  .insert(
+    r.http('http://eric.clst.org/wupl/Stuff/gz_2010_us_040_00_500k.json')('features')
+     .filter(r.row('geometry')('type').ne('MultiPolygon'))
+     .map(function (row) {
+       return {
+        properties: row('properties'),
+        location: r.geojson(row('geometry'))
+       }
+     })
+  )
+```
+Order list of states by distance to San Francisco:
+```
+r.table('states')
+  .orderBy(function (row) {
+    return r.point(-122, 37).distance(row('location'));
+  })('properties')('NAME')
+```
+
+Get all states within 1000 miles from San Francisco
+
+```
+r.table('states')
+  .filter(function (row) {
+    return r.circle([-122, 37], 1000, {unit: 'mi' }).intersects(row('location'));
+  })('properties')('NAME')
+```
+
+Listen to points getting added within 100 miles of -122,35
+
+```
+// Create table
+r.tableCreate('points')
+// Create Index
+r.table('points').indexCreate('location', { geo: true })
+// Start listening
+r.table('points')
+  .changes()
+  .filter(function (row) {
+    return r.point(-122, 35).distance(row('new_val')('location'), { unit: 'mi' }).lt(100);
+  });
+// In another tab/window, start adding points..
+r.table('points')
+  .insert({
+    location: r.point(-123.5, 35)
+  })
+```
+
 ## Extra Credit
 
 ### Running Queries #2

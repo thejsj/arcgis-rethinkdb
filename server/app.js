@@ -13,7 +13,7 @@ var config = require("./config");
 var app = express();
 app
   .use(bodyParser.urlencoded({extended: true}))
-  .use(express.static(__dirname + "/public"));
+  .use(express.static(__dirname + "/../public"));
 
 var io = sockio.listen(app.listen(config.ports.http), { log: false });
 

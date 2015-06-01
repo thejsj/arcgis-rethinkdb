@@ -19,12 +19,15 @@ $(document).ready(function() {
   var maxStat = 0.0;
   var styleFun = function(g) {
     var letters = '0123456789abcdeff'.split('');
+    console.log('Geometry');
+    console.log(g.geometry.stat, maxStat);
     var scaledStat = Math.log(1 + 99999 * g.geometry.stat / maxStat) / Math.log(100000);
     //var scaledStat = Math.log(1 + 99 * g.geometry.stat / maxStat) / Math.log(100);
     var red = scaledStat * 255;
     var green = 32 + 64 * scaledStat;
     var blue = 96 - 32 * scaledStat;
     var opacity = 0.3 + 0.7 * scaledStat;
+    console.log(red, green, blue);
     var colorStr = "#" +
       letters[Math.floor(red / 16)] + letters[Math.floor(red) % 16] +
       letters[Math.floor(green / 16)] + letters[Math.floor(green) % 16] +

@@ -13,8 +13,8 @@ app
   .use(bodyParser.urlencoded({extended: true}))
   .use(express.static(__dirname + "/public"));
 
-var io = sockio.listen(app.listen(config.port), { log: false });
-console.log("Server started on port " + config.port);
+var io = sockio.listen(app.listen(config.ports.http), { log: false });
+console.log("Server started on port " + config.ports.http);
 
 r.init(config.database, [
   {

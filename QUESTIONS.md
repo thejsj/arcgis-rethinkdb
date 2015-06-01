@@ -20,6 +20,5 @@ for new images from Instagram and adds them to the database.
 
 ## TODO
 
-1. Add relative colors in relation to their density
-2. Add tooltip
-3. Add changefeeds?
+1. Not all counties showing up
+2. Add changefeeds in some way

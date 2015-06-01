@@ -30,6 +30,14 @@ r.init(config.database, [
 io.on("connection", function(socket) {
   Promise.resolve()
   .then(function () {
+    return r.table('counties_processed').max({ index: 'stat' })('stat')
+     .run(r.conn);
+  })
+  .then(function (max) {
+    socket.emit("max", max);
+    return true;
+  })
+  .then(function () {
     return r.connect(config.database);
   })
   .then(function(conn1) {
@@ -66,6 +74,7 @@ io.on("connection", function(socket) {
   })
   .then(function(cursor) {
     var eventQueue = new EventQueue();
+    var count = 0;
     var dispatchQueue = function () {
       var items = eventQueue.clear();
       items = items.map(function (item) {
@@ -77,7 +86,6 @@ io.on("connection", function(socket) {
       socket.emit("regionBatch", items);
     };
     eventQueue.on('400', dispatchQueue);
-    var count = 0;
     var addStat = function(err, stat) {
       if (err) throw err;
       eventQueue.append(stat);

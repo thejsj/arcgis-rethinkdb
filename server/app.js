@@ -19,8 +19,19 @@ var io = sockio.listen(app.listen(config.ports.http), { log: false });
 
 r.init(config.database, [
   {
-    name: "instafood",
-    indexes: ["time"]
+    name: "counties",
+    indexes: ["fips", "geometry"]
+  },
+  {
+    name: "county_stats",
+    indexes: ["fips", "geometry"]
+  },
+  {
+    name: "restaurants",
+    indexes: ["geometry"]
+  },
+  {
+    name: "counties_processed"
   }
 ])
 .then(function (conn) {

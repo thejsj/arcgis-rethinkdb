@@ -1,6 +1,7 @@
 !**/*
 
 data
+data*
 node_modules
 data
 *.tar.gz

@@ -1,5 +1,8 @@
 !**/*
 
-data-backup
+data
 node_modules
 data
+*.tar.gz
+.DS_Store
+
